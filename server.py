@@ -8,7 +8,8 @@ from mcp.server.fastmcp import FastMCP
 
 from input_keys import press
 from runtime import (
-    ACTIONS, bindings, completed_dump, decode, dump_dirs, frozen_fps, hashes,
+    ACTIONS, HUNT_STEP_KINDS, bindings, completed_dump, decode, dump_dirs,
+    frozen_fps, hashes, hunt_result,
     marked_hash, performance, selection,
 )
 
@@ -55,6 +56,28 @@ def create_server(root, window):
             fresh = read_log(offset)
             return {"action": action, "sent": key, "marked": marked_hash(fresh),
                     "selected_hashes": selection(fresh), "frozen_fps": frozen_fps(fresh)}
+
+    @server.tool()
+    def hunt_step(kind: str, direction: str = "next", timeout_seconds: float = 3) -> dict:
+        """Step a shader or buffer and wait for the patched DLL's selected hash.
+
+        Use kinds such as pixelshader, vertexshader, indexbuffer, or vertexbuffer.
+        """
+        if kind not in HUNT_STEP_KINDS or direction not in {"next", "previous"}:
+            raise ValueError("Expected a shader or buffer kind and next or previous")
+        action = f"{direction}_{kind}"
+
+        with lock:
+            offset = log.stat().st_size
+            key = send(action, 80)
+            deadline = time.monotonic() + max(0, min(timeout_seconds, 15))
+            while True:
+                result = hunt_result(read_log(offset), action)
+                if result is not None:
+                    return {"action": action, "sent": key, "status": "confirmed", **result}
+                if time.monotonic() >= deadline:
+                    return {"action": action, "sent": key, "status": "unconfirmed"}
+                time.sleep(0.05)
 
     @server.tool()
     def trigger_dump(hold_ms: int = 100, timeout_seconds: float = 15) -> dict:
