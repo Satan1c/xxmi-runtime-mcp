@@ -56,7 +56,10 @@ controller bindings, and mouse buttons require another binding or input backend.
   Enable the performance monitor, let it sample, then freeze it to capture FPS
   in the log. `get_runtime_state` shows the most recent logged values.
 - Dev DLLs patched with the adapter additionally log changed hunting selections
-  and the profiling overlay text. See [adapter maintenance](https://github.com/xxmi-lang/xxmi-runtime-mcp/tree/dev/satan1c/adapters).
+  and the profiling overlay text. Use `hunt_step` for a shader or buffer
+  when you need the resulting hash without marking. A confirmed null hash
+  means no item is selected. An unconfirmed step means no matching response
+  arrived. See [adapter maintenance](https://github.com/xxmi-lang/xxmi-runtime-mcp/tree/dev/satan1c/adapters).
 - Install the bundled [agent skill](skills/xxmi-runtime/SKILL.md) in your
   MCP client's skills directory to give the agent this workflow.
 

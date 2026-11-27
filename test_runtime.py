@@ -1,7 +1,11 @@
+import asyncio
+import json
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+
+from server import create_server
 
 from input_keys import press, translate
 from runtime import bindings, completed_dump, frozen_fps, hashes, marked_hash, performance, selection
@@ -49,3 +53,31 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(frozen_fps(log), 59.9)
         self.assertEqual(marked_hash(">>>> Index buffer marked: index buffer hash = 00112233\n"),
                          {"kind": "Index buffer", "hash": "00112233"})
+
+
+    def test_hunt_step_requires_a_fresh_reply_from_the_matching_action(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            log = root / "d3d11_log.txt"
+            record = "XXMI_MCP/1 hunt next_pixelshader 0011223344556677\n"
+            log.write_text("[Hunting]\n  next_pixelshader=F6\n" + record)
+            server = create_server(root, 42)
+
+            def call():
+                args = {"kind": "pixelshader", "timeout_seconds": 0}
+                content = asyncio.run(server.call_tool("hunt_step", args))
+                return json.loads(content[0].text)
+
+            with patch("server.press"):
+                self.assertEqual(call()["status"], "unconfirmed")
+
+            def reply(binding, window, _hold_ms):
+                self.assertEqual((binding, window), ("F6", 42))
+                with log.open("a") as stream:
+                    stream.write("XXMI_MCP/1 hunt next_vertexshader none\n")
+                    stream.write(record)
+
+            with patch("server.press", side_effect=reply):
+                result = call()
+            self.assertEqual(result["status"], "confirmed")
+            self.assertEqual(result["hash"], "0011223344556677")

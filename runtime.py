@@ -7,6 +7,8 @@ from io import TextIOWrapper
 KINDS = ("vertexbuffer", "indexbuffer", "vertexshader", "hullshader",
          "domainshader", "geometryshader", "pixelshader", "computeshader",
          "rendertarget")
+HUNT_STEP_KINDS = KINDS[:-1]
+
 ACTIONS = {"analyse_frame", "toggle_hunting", "next_marking_mode", "done_hunting",
            "monitor_performance", "freeze_performance_monitor", "reload_config"}
 ACTIONS.update(f"{step}_{kind}" for kind in KINDS for step in ("next", "previous", "mark"))
@@ -98,3 +100,12 @@ def marked_hash(log):
 def frozen_fps(log):
     matches = re.findall(r"(?m)^Performance Monitor (\d+(?:\.\d+)?)fps", log)
     return float(matches[-1]) if matches else None
+
+
+def hunt_result(log, action):
+    pattern = rf"(?m)^XXMI_MCP/1 hunt {re.escape(action)} (none|[a-f0-9]{{8}}|[a-f0-9]{{16}})\n"
+    matches = re.findall(pattern, log)
+    if not matches:
+        return None
+    value = matches[-1]
+    return {"hash": None if value == "none" else value}
