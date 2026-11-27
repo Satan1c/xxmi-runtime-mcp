@@ -1,7 +1,7 @@
 # DLL telemetry adapter
 
 `satan1c-dev.patch` targets Satan1c/XXMI-Libs-Package at
-`e930c66752c2561fa7cf7bce9700b17a462bcc64`. Apply it in a disposable source
+the commit recorded in [base-revision.txt](base-revision.txt). Apply it in a disposable source
 checkout and build the DLL with the project's usual Windows toolchain.
 The patch is covered by the [GPLv3](LICENSE.GPL.txt), matching the DLL source.
 
@@ -9,6 +9,9 @@ The patch is covered by the [GPLv3](LICENSE.GPL.txt), matching the DLL source.
 git apply --check /absolute/path/to/xxmi-runtime-mcp/adapters/satan1c-dev.patch
 git apply /absolute/path/to/xxmi-runtime-mcp/adapters/satan1c-dev.patch
 ```
+
+The CI workflow builds the patched Windows x64 DLL and publishes it as the
+`xxmi-patched-windows-x64` artifact.
 
 The patch uses the existing info log and samples fields where the overlay
 already reads them. It emits changed values under the `XXMI_MCP/1` prefix.
