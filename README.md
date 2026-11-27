@@ -60,7 +60,7 @@ controller bindings, and mouse buttons require another binding or input backend.
 - Install the bundled [agent skill](skills/xxmi-runtime/SKILL.md) in your
   MCP client's skills directory to give the agent this workflow.
 
-Run offline checks with `python -m unittest -v`. A live acceptance run should
+Run the companion tests with `python -m unittest -v`. A live acceptance run should
 remap the dump hotkey via an include, reload, verify the new reported binding,
 capture a dump, search for a known hash, step a shader, and sample profiling.
 Repeat on stock Windows and Steam/Proton XWayland before cutting a release.
