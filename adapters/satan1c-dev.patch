@@ -1,0 +1,50 @@
+--- a/DirectX11/Overlay.cpp
++++ b/DirectX11/Overlay.cpp
+@@ -696,6 +696,25 @@
+ 	DrawOutlinedString(mFont.get(), osdString, textPosition, DirectX::Colors::LimeGreen);
+ }
+ 
++static void LogMcpSelections()
++{
++	wchar_t snapshot[256];
++	swprintf_s(snapshot, L"vertexbuffer=%08x indexbuffer=%08x vertexshader=%016llx "
++		L"hullshader=%016llx domainshader=%016llx geometryshader=%016llx "
++		L"pixelshader=%016llx computeshader=%016llx rendertarget=%08x",
++		G->mSelectedVertexBuffer, G->mSelectedIndexBuffer, G->mSelectedVertexShader,
++		G->mSelectedHullShader, G->mSelectedDomainShader, G->mSelectedGeometryShader,
++		G->mSelectedPixelShader, G->mSelectedComputeShader,
++		G->mSelectedRenderTarget == (ID3D11Resource *)-1
++			? 0xffffffffu : GetOrigResourceHash(G->mSelectedRenderTarget));
++
++	static std::wstring previous;
++	if (previous != snapshot) {
++		LogInfoW(L"XXMI_MCP/1 selections %ls\n", snapshot);
++		previous = snapshot;
++	}
++}
++
+ void Overlay::DrawShaderInfoLines(float *y)
+ {
+ 	// Order is the same as the pipeline... Not quite the same as the count
+@@ -770,6 +789,13 @@
+ 
+ 	Profiling::update_txt();
+ 
++	static std::wstring previous;
++	if (!Profiling::text.empty() && previous != Profiling::text) {
++		LogInfoW(L"XXMI_MCP/1 performance begin\n%ls\nXXMI_MCP/1 performance end\n",
++			Profiling::text.c_str());
++		previous = Profiling::text;
++	}
++
+ 	strSize = mFontProfiling->MeasureString(Profiling::text.c_str());
+ 	DrawRectangle(0, *y, strSize.x + 3, strSize.y, 0, 0, 0, 0.75);
+ 
+@@ -819,6 +845,7 @@
+ 				DrawOutlinedString(mFont.get(), osdString, textPosition, DirectX::Colors::LimeGreen);
+ 				y += strSize.y;
+ 
++				LogMcpSelections();
+ 				DrawShaderInfoLines(&y);
+ 
+ 				// Bottom of screen
