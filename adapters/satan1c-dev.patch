@@ -48,3 +48,131 @@
  				DrawShaderInfoLines(&y);
  
  				// Bottom of screen
+--- a/DirectX11/Hunting.cpp
++++ b/DirectX11/Hunting.cpp
+@@ -1338,6 +1338,19 @@
+ 		G->marking_mode = MarkingMode::SKIP;
+ }
+ 
++template <typename HashType>
++static void LogMcpHuntStep(const char *action, HashType hash)
++{
++	if (G->hunting != HUNTING_MODE_ENABLED)
++		return;
++
++	if (hash == (HashType)-1)
++		LogInfo("XXMI_MCP/1 hunt %s none\n", action);
++	else
++		LogInfo("XXMI_MCP/1 hunt %s %0*llx\n", action,
++			(int)(2 * sizeof(hash)), (unsigned long long)hash);
++}
++
+ template <typename ItemType>
+ static void HuntNext(const char *type, std::set<ItemType> *visited,
+ 	ItemType *selected, int *selectedPos)
+@@ -1394,6 +1407,7 @@
+ 	G->mSelectedVertexBuffer_PixelShader.clear();
+ 	G->mSelectedVertexBuffer_VertexShader.clear();
+ 	G->gVisitedVertexBufferSlotIds.clear();
++	LogMcpHuntStep("next_vertexbuffer", G->mSelectedVertexBuffer);
+ 	LeaveCriticalSection(&G->mCriticalSection);
+ }
+ static void NextIndexBuffer(HackerDevice *device, void *private_data)
+@@ -1403,6 +1417,7 @@
+ 	EnterCriticalSectionPretty(&G->mCriticalSection);
+ 	G->mSelectedIndexBuffer_PixelShader.clear();
+ 	G->mSelectedIndexBuffer_VertexShader.clear();
++	LogMcpHuntStep("next_indexbuffer", G->mSelectedIndexBuffer);
+ 	LeaveCriticalSection(&G->mCriticalSection);
+ }
+ static void NextVertexBufferSlot(HackerDevice* device, void* private_data)
+@@ -1433,6 +1448,7 @@
+ 	EnterCriticalSectionPretty(&G->mCriticalSection);
+ 	G->mSelectedPixelShader_VertexBuffer.clear();
+ 	G->mSelectedPixelShader_IndexBuffer.clear();
++	LogMcpHuntStep("next_pixelshader", G->mSelectedPixelShader);
+ 	LeaveCriticalSection(&G->mCriticalSection);
+ }
+ static void NextVertexShader(HackerDevice *device, void *private_data)
+@@ -1442,23 +1458,28 @@
+ 	EnterCriticalSectionPretty(&G->mCriticalSection);
+ 	G->mSelectedVertexShader_VertexBuffer.clear();
+ 	G->mSelectedVertexShader_IndexBuffer.clear();
++	LogMcpHuntStep("next_vertexshader", G->mSelectedVertexShader);
+ 	LeaveCriticalSection(&G->mCriticalSection);
+ }
+ static void NextComputeShader(HackerDevice *device, void *private_data)
+ {
+ 	HuntNext<UINT64>("compute shader", &G->mVisitedComputeShaders, &G->mSelectedComputeShader, &G->mSelectedComputeShaderPos);
++	LogMcpHuntStep("next_computeshader", G->mSelectedComputeShader);
+ }
+ static void NextGeometryShader(HackerDevice *device, void *private_data)
+ {
+ 	HuntNext<UINT64>("geometry shader", &G->mVisitedGeometryShaders, &G->mSelectedGeometryShader, &G->mSelectedGeometryShaderPos);
++	LogMcpHuntStep("next_geometryshader", G->mSelectedGeometryShader);
+ }
+ static void NextDomainShader(HackerDevice *device, void *private_data)
+ {
+ 	HuntNext<UINT64>("domain shader", &G->mVisitedDomainShaders, &G->mSelectedDomainShader, &G->mSelectedDomainShaderPos);
++	LogMcpHuntStep("next_domainshader", G->mSelectedDomainShader);
+ }
+ static void NextHullShader(HackerDevice *device, void *private_data)
+ {
+ 	HuntNext<UINT64>("hull shader", &G->mVisitedHullShaders, &G->mSelectedHullShader, &G->mSelectedHullShaderPos);
++	LogMcpHuntStep("next_hullshader", G->mSelectedHullShader);
+ }
+ static void NextRenderTarget(HackerDevice *device, void *private_data)
+ {
+@@ -1530,6 +1551,7 @@
+ 	G->mSelectedVertexBuffer_PixelShader.clear();
+ 	G->mSelectedVertexBuffer_VertexShader.clear();
+ 	G->gVisitedVertexBufferSlotIds.clear();
++	LogMcpHuntStep("previous_vertexbuffer", G->mSelectedVertexBuffer);
+ 	LeaveCriticalSection(&G->mCriticalSection);
+ }
+ static void PrevVertexBufferSlot(HackerDevice* device, void* private_data)
+@@ -1566,6 +1588,7 @@
+ 	EnterCriticalSectionPretty(&G->mCriticalSection);
+ 	G->mSelectedIndexBuffer_PixelShader.clear();
+ 	G->mSelectedIndexBuffer_VertexShader.clear();
++	LogMcpHuntStep("previous_indexbuffer", G->mSelectedIndexBuffer);
+ 	LeaveCriticalSection(&G->mCriticalSection);
+ }
+ static void PrevPixelShader(HackerDevice *device, void *private_data)
+@@ -1575,6 +1598,7 @@
+ 	EnterCriticalSectionPretty(&G->mCriticalSection);
+ 	G->mSelectedPixelShader_VertexBuffer.clear();
+ 	G->mSelectedPixelShader_IndexBuffer.clear();
++	LogMcpHuntStep("previous_pixelshader", G->mSelectedPixelShader);
+ 	LeaveCriticalSection(&G->mCriticalSection);
+ }
+ static void PrevVertexShader(HackerDevice *device, void *private_data)
+@@ -1584,23 +1608,28 @@
+ 	EnterCriticalSectionPretty(&G->mCriticalSection);
+ 	G->mSelectedVertexShader_VertexBuffer.clear();
+ 	G->mSelectedVertexShader_IndexBuffer.clear();
++	LogMcpHuntStep("previous_vertexshader", G->mSelectedVertexShader);
+ 	LeaveCriticalSection(&G->mCriticalSection);
+ }
+ static void PrevComputeShader(HackerDevice *device, void *private_data)
+ {
+ 	HuntPrev<UINT64>("compute shader", &G->mVisitedComputeShaders, &G->mSelectedComputeShader, &G->mSelectedComputeShaderPos);
++	LogMcpHuntStep("previous_computeshader", G->mSelectedComputeShader);
+ }
+ static void PrevGeometryShader(HackerDevice *device, void *private_data)
+ {
+ 	HuntPrev<UINT64>("geometry shader", &G->mVisitedGeometryShaders, &G->mSelectedGeometryShader, &G->mSelectedGeometryShaderPos);
++	LogMcpHuntStep("previous_geometryshader", G->mSelectedGeometryShader);
+ }
+ static void PrevDomainShader(HackerDevice *device, void *private_data)
+ {
+ 	HuntPrev<UINT64>("domain shader", &G->mVisitedDomainShaders, &G->mSelectedDomainShader, &G->mSelectedDomainShaderPos);
++	LogMcpHuntStep("previous_domainshader", G->mSelectedDomainShader);
+ }
+ static void PrevHullShader(HackerDevice *device, void *private_data)
+ {
+ 	HuntPrev<UINT64>("hull shader", &G->mVisitedHullShaders, &G->mSelectedHullShader, &G->mSelectedHullShaderPos);
++	LogMcpHuntStep("previous_hullshader", G->mSelectedHullShader);
+ }
+ static void PrevRenderTarget(HackerDevice *device, void *private_data)
+ {

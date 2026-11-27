@@ -16,7 +16,9 @@ The CI workflow builds the patched Windows x64 DLL and publishes it as the
 The patch uses the existing info log and samples fields where the overlay
 already reads them. It emits changed values under the `XXMI_MCP/1` prefix.
 Selection records carry lowercase hexadecimal values and the all-ones sentinel
-for empty slots. Performance records enclose the profiling overlay text between
+for empty slots. The hunting callbacks emit `hunt <action> <hash|none>`
+after each next or previous shader or buffer action, including steps that
+select the same hash. Performance records enclose the profiling overlay text between
 `performance begin` and `performance end` lines. Published values are the
 last readings observed while those overlays were drawn.
 
